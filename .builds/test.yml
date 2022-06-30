@@ -5,7 +5,7 @@ environment:
 packages:
 - wget
 sources:
-- https://git.sr.ht/~shunter/ystrings
+- https://git.sr.ht/~shunter/mstrings
 tasks:
 - install-roswell: |
     wget --no-verbose -O- https://github.com/roswell/roswell/releases/download/v$ROSWELL_RELEASE/roswell-$ROSWELL_RELEASE-linux-x86_64.tar.bz2 | tar -jx
@@ -14,7 +14,7 @@ tasks:
     # Register project tree with ASDF
     ASDF_REG_CONF_DIR=~/.config/common-lisp/source-registry.conf.d
     mkdir -p $ASDF_REG_CONF_DIR
-    echo "(:tree \"$HOME/ystrings\")" > $ASDF_REG_CONF_DIR/ci.conf
+    echo "(:tree \"$HOME/mstrings\")" > $ASDF_REG_CONF_DIR/ci.conf
 
     # Use lisp impl and print configuration
     ros install sbcl-bin
@@ -24,17 +24,17 @@ tasks:
 - build: |
     PATH=~/roswell:$PATH
     # Fetch deps
-    ros --eval '(ql:quickload :ystrings/test)'
+    ros --eval '(ql:quickload :mstrings/test)'
 - test-sbcl: |
     PATH=~/roswell:$PATH
     ros use sbcl-bin
-    ros --system parachute --system ystrings/test \
-      --eval '(setf *debugger-hook* (lambda (e h) (print e) (uiop:quit 1))) (parachute:test-toplevel :xyz.shunter.ystrings.test)'
+    ros --system parachute --system mstrings/test \
+      --eval '(setf *debugger-hook* (lambda (e h) (print e) (uiop:quit 1))) (parachute:test-toplevel :xyz.shunter.mstrings.test)'
 - test-ccl: |
     PATH=~/roswell:$PATH
     ros use ccl-bin
-    ros --system parachute --system ystrings/test \
-      --eval '(setf *debugger-hook* (lambda (e h) (print e) (uiop:quit 1))) (parachute:test-toplevel :xyz.shunter.ystrings.test)'
+    ros --system parachute --system mstrings/test \
+      --eval '(setf *debugger-hook* (lambda (e h) (print e) (uiop:quit 1))) (parachute:test-toplevel :xyz.shunter.mstrings.test)'
 triggers:
 - action: email
   condition: failure

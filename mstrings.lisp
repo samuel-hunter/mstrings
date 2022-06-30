@@ -1,15 +1,15 @@
-;;; ystrings.lisp - reader macro implementation
+;;; mstrings.lisp - reader macro implementation
 ;;;
 ;;; Copyright (c) 2022 Samuel Hunter <samuel (at) shunter (dot) xyz>
 ;;; BSD 3-Clause License. See LICENSE for details.
 
-(defpackage #:xyz.shunter.ystrings
-  (:nicknames #:ystrings)
+(defpackage #:xyz.shunter.mstrings
+  (:nicknames #:mstrings)
   (:use #:cl)
-  (:export #:use-ystrings)
+  (:export #:use-mstrings)
   (:documentation "Reader macro for friendlier multiline strings"))
 
-(in-package #:xyz.shunter.ystrings)
+(in-package #:xyz.shunter.mstrings)
 
 
 
@@ -60,7 +60,7 @@
       (write-char #\Newline out)
       (setf newlines-printed? t))))
 
-(defun read-literal-ystring (stream)
+(defun read-literal-mstring (stream)
   (with-output-to-string (out)
     (do () (nil)
       (when (read-line-until-delim stream out)
@@ -70,7 +70,7 @@
         (return))
       (skip-empty-lines stream out))))
 
-(defun read-folding-ystring (stream)
+(defun read-folding-mstring (stream)
   (with-output-to-string (out)
     (do (print-space?) (nil)
       (setf print-space? (read-line-until-delim stream out))
@@ -81,16 +81,16 @@
                  print-space?)
         (write-char #\Space out)))))
 
-(defun read-ystring-reader (stream subchar numarg)
+(defun read-mstring-reader (stream subchar numarg)
   (declare (ignore subchar))
   (when numarg
-    (warn "Ystring argument ~D was ignored." numarg))
+    (warn "M-string argument ~D was ignored." numarg))
 
   (let ((arg (read-char stream t nil t))
-        (reading-strategy #'read-literal-ystring))
+        (reading-strategy #'read-literal-mstring))
     (cond
       ((char= arg #\>)
-       (setf reading-strategy #'read-folding-ystring))
+       (setf reading-strategy #'read-folding-mstring))
       ;; Room for more string styles here, if need be
       ((not (char= arg #\"))
        (error "Unknown string style '~C'" arg)))
@@ -99,10 +99,11 @@
 
     (funcall reading-strategy stream)))
 
-(syntax:define-package-syntax #:xyz.shunter.ystrings
+(syntax:define-package-syntax #:xyz.shunter.mstrings
   (:merge :standard)
-  (:dispatch-macro-char #\# #\Y #'read-ystring-reader))
+  (:dispatch-macro-char #\# #\M #'read-mstring-reader))
 
-(defun use-ystrings (&optional (subchar #\Y) (readtable *readtable*))
+(defun use-mstrings (&optional (subchar #\M) (readtable *readtable*))
+  "Set a sharpsign read macro on READTABLE, or the current readtable if not specified, to read an mstring."
   (set-dispatch-macro-character
-    #\# subchar #'read-ystring-reader readtable))
+    #\# subchar #'read-mstring-reader readtable))
