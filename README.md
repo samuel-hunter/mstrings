@@ -77,12 +77,12 @@ $ cd ~/common-lisp/ # Or wherever you store your definitions
 $ git clone https://git.sr.ht/~shunter/parsnip
 ```
 
-To use Y-string macros, call `(syntax:use-syntax :mstrings)` at the beginning
+To use Y-string macros, call `(syntax:use-syntax '#:mstrings)` at the beginning
 of every file:
 
 ```lisp
 * (require :mstrings)
-* (syntax:use-syntax :mstrings)
+* (syntax:use-syntax '#:mstrings)
 
 * #M"Hello, world!"
 * "Hello, world!"
@@ -135,8 +135,36 @@ The quick brown fox jumps over the lazy dog.
 Sphinx of black quartz, judge my vow!
 ```
 
+## Shorthand notation: `#"..." and #>"..."`
+
+The reader macro function provides single-mode shorthands based on the macro
+subchar, but are not provided by default to prevent macro collisions:
+
+```lisp
+* (syntax:use-syntax 'mstrings:shorthand-mstrings)
+  ;; Or, for both:
+* (syntax:use-syntax '(#:mstrings mstrings:shorthand-mstrings))
+
+*    #"Literal-block
+       Mode"
+"Literal-block
+Mode"
+*    #>"Folding-block
+        Mode"
+"Folding-block Mode"
+```
+
 ## API
 
-### [Function] **use-mstrings** *&optional subchar readtable*
+### [Function] **mstring-reader** *stream subchar arg*
 
-Add the M-string read macro to the sharpsign dispatch character. If not provided, *subchar* is `#\Y`, and *readtable* is the current readtable, `*readtable*`.
+Reader macro accepts multiline strings. It ignores and warns on any provided
+*arg*, and provides a few quality-of-life features depending on the value of
+*subchar*:
+
+- If *subchar* is `#\"`, it is always literal-block mode (`#M"..."`) and reads
+  the rest of the string.
+- If *subchar* is `#\>`, it is always folding-block mode (`#M>"..."`).
+- If *subchar* is anything else, it follows the default behavior: it assumes
+  literal-block mode unless there is a greater-than-sign preceding the string,
+  in which case it switches to folding-block mode.

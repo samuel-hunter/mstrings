@@ -9,7 +9,8 @@
   (:documentation "Mstrings library test suite"))
 
 (in-package #:xyz.shunter.mstrings.test)
-(syntax:use-syntax '#:xyz.shunter.mstrings)
+
+(syntax:use-syntax '(#:xyz.shunter.mstrings shorthand-mstrings))
 
 
 
@@ -43,16 +44,16 @@ World!"
 
   (t:is string= "The
 smallest
-scorpion
-stings
+scorpions
+sting
 the
-most"
+worst"
         #M"The
                 smallest
-        scorpion
-                stings
+        scorpions
+                sting
                         the
-           most")
+           worst")
 
   (t:is string= "Overhang
 "
@@ -74,10 +75,20 @@ World!"
 
            World!")
 
-  (t:is string= "The smallest scorpion stings the most"
+  (t:is string= "The smallest scorpions sting the worst"
         #M>"The
                 smallest
-        scorpion
-                stings
+        scorpions
+                sting
                         the
-            most"))
+            worst"))
+
+(t:define-test mstring-macro-shorthands
+  (t:is string= "Literal-block
+Mode"
+        #"Literal-block
+          Mode")
+
+  (t:is string= "Folding-block Mode"
+        #>"Folding-block
+           Mode"))
