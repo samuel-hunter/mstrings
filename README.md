@@ -1,7 +1,13 @@
 # Y-Strings for Common Lisp
+[![builds.sr.ht status](https://builds.sr.ht/~shunter/ystrings/commits/test.yml.svg)](https://builds.sr.ht/~shunter/ystrings/commits/test.yml)
 
-When writing strings that take multiple lines, for example within an extensive
-docstring, it feels natural to align them up; however, the Lisp reader will
+Reader macro for friendlier multiline strings.
+
+Ystrings defines a reader macro for multiline strings with various
+quality-of-life features, including whitespace elimination and folding.
+
+When writing strings that take multiple lines, for example an extensive
+docstring, it feels natural to align them up. However, the Lisp reader will
 keep all leading whitespace in the string:
 
 ```lisp

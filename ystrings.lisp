@@ -1,12 +1,13 @@
 ;;; ystrings.lisp - reader macro implementation
 ;;;
-;;; Copyright (c) 2022 Samuel Hunter
-;;; BSD 3-Clause
+;;; Copyright (c) 2022 Samuel Hunter <samuel (at) shunter (dot) xyz>
+;;; BSD 3-Clause License. See LICENSE for details.
 
 (defpackage #:xyz.shunter.ystrings
   (:nicknames #:ystrings)
   (:use #:cl)
-  (:export #:use-ystrings))
+  (:export #:use-ystrings)
+  (:documentation "Reader macro for friendlier multiline strings"))
 
 (in-package #:xyz.shunter.ystrings)
 
@@ -17,7 +18,7 @@
 ;; - Sequence of n newlines and any # of spaces are folded into n newlines
 ;; - Non-space or escaped character marks beginning of next line
 
-;; Folded mode:
+;; Folding mode:
 ;; - Newlines and trailing spaces turn into a single space
 ;; - Sequence of n+1 newlines and any # of spaces are folded into n newlines
 ;; - non-space or escaped character marks beginning of next line
@@ -47,24 +48,38 @@
 (defun skip-empty-lines (stream out)
   ;; Skip to the first non-space character, and transform the number of "empty
   ;; lines" (lines with no text or only whitespace) into #\Newline to OUT.
+  ;;
+  ;; Return whether any newlines were printed
   (do ((c (read-char stream t nil t)
           (read-char stream t nil t))
-       (count 0))
+       newlines-printed?)
       ((not (whitespacep c))
        (unread-char c stream)
-       count)
+       newlines-printed?)
     (when (char= c #\Newline)
-      (write-char #\Newline out))))
+      (write-char #\Newline out)
+      (setf newlines-printed? t))))
 
-(defun read-ystring (stream newline-style)
+(defun read-literal-ystring (stream)
   (with-output-to-string (out)
-    (loop
+    (do () (nil)
       (when (read-line-until-delim stream out)
-        (write-char newline-style out))
+        (write-char #\Newline out))
       (when (char= (peek-char nil stream t nil t) #\")
         (read-char stream t nil t)
         (return))
       (skip-empty-lines stream out))))
+
+(defun read-folding-ystring (stream)
+  (with-output-to-string (out)
+    (do (print-space?) (nil)
+      (setf print-space? (read-line-until-delim stream out))
+      (when (char= (peek-char nil stream t nil t) #\")
+        (read-char stream t nil t)
+        (return))
+      (when (and (not (skip-empty-lines stream out))
+                 print-space?)
+        (write-char #\Space out)))))
 
 (defun read-ystring-reader (stream subchar numarg)
   (declare (ignore subchar))
@@ -72,17 +87,17 @@
     (warn "Ystring argument ~D was ignored." numarg))
 
   (let ((arg (read-char stream t nil t))
-        (newline-style #\Newline))
+        (reading-strategy #'read-literal-ystring))
     (cond
       ((char= arg #\>)
-       (setf newline-style #\Space))
+       (setf reading-strategy #'read-folding-ystring))
       ;; Room for more string styles here, if need be
       ((not (char= arg #\"))
        (error "Unknown string style '~C'" arg)))
     (unless (char= arg #\")
       (assert (char= #\" (read-char stream t nil t))))
 
-    (read-ystring stream newline-style)))
+    (funcall reading-strategy stream)))
 
 (syntax:define-package-syntax #:xyz.shunter.ystrings
   (:merge :standard)
