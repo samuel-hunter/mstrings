@@ -128,3 +128,9 @@ multiple lines in source are folded into one line, joined with spaces:
 The quick brown fox jumps over the lazy dog.
 Sphinx of black quartz, judge my vow!
 ```
+
+## API
+
+### [Function] **use-ystrings** *&optional subchar readtable*
+
+Add the ystring read macro to the sharpsign dispatch character. If not provided, *subchar* is `#\Y`, and *readtable* is the current readtable, `*readtable*`.

@@ -38,9 +38,11 @@
        (return))
       (t (write-char c out)))))
 
+(declaim (ftype (function (character) boolean) whitespacep)
+         (inline whitespacep))
 (defun whitespacep (c)
-  ;; Whether the character is a whitespace
-  (position c #(#\Space #\Tab #\Page #\Newline)))
+  (and (position c #.(coerce '(#\Space #\Tab #\Page #\Newline) 'string))
+       t))
 
 (defun skip-empty-lines (stream out)
   ;; Skip to the first non-space character, and transform the number of "empty
@@ -57,9 +59,6 @@
 (defun read-ystring (stream newline-style)
   (with-output-to-string (out)
     (loop
-      (when (char= (peek-char nil stream t nil t) #\")
-        (read-char stream t nil t)
-        (return))
       (when (read-line-until-delim stream out)
         (write-char newline-style out))
       (when (char= (peek-char nil stream t nil t) #\")
@@ -89,5 +88,6 @@
   (:merge :standard)
   (:dispatch-macro-char #\# #\Y #'read-ystring-reader))
 
-(defun use-ystrings (&optional (readtable *readtable*))
-  (set-dispatch-macro-character #\# #\Y #'read-ystring-reader readtable))
+(defun use-ystrings (&optional (subchar #\Y) (readtable *readtable*))
+  (set-dispatch-macro-character
+    #\# subchar #'read-ystring-reader readtable))
