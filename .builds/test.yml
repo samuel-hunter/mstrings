@@ -1,0 +1,42 @@
+image: debian/stable
+environment:
+  ROSWELL_RELEASE: 21.10.14.111
+  ROSWELL_HOME: /home/build/.roswell
+packages:
+- wget
+sources:
+- https://git.sr.ht/~shunter/ystrings
+tasks:
+- install-roswell: |
+    wget --no-verbose -O- https://github.com/roswell/roswell/releases/download/v$ROSWELL_RELEASE/roswell-$ROSWELL_RELEASE-linux-x86_64.tar.bz2 | tar -jx
+    PATH=~/roswell:$PATH
+
+    # Register project tree with ASDF
+    ASDF_REG_CONF_DIR=~/.config/common-lisp/source-registry.conf.d
+    mkdir -p $ASDF_REG_CONF_DIR
+    echo "(:tree \"$HOME/ystrings\")" > $ASDF_REG_CONF_DIR/ci.conf
+
+    # Use lisp impl and print configuration
+    ros install sbcl-bin
+    ros install ccl-bin
+    ros use sbcl-bin
+    ros config
+- build: |
+    PATH=~/roswell:$PATH
+    # Fetch deps
+    ros --eval '(ql:quickload :ystrings/test)'
+- test-sbcl: |
+    PATH=~/roswell:$PATH
+    ros use sbcl-bin
+    ros --system parachute --system ystrings/test \
+      --eval '(setf *debugger-hook* (lambda (e h) (print e) (uiop:quit 1))) (parachute:test-toplevel :xyz.shunter.ystrings.test)'
+- test-ccl: |
+    PATH=~/roswell:$PATH
+    ros use ccl-bin
+    ros --system parachute --system ystrings/test \
+      --eval '(setf *debugger-hook* (lambda (e h) (print e) (uiop:quit 1))) (parachute:test-toplevel :xyz.shunter.ystrings.test)'
+triggers:
+- action: email
+  condition: failure
+  to: builds@shunter.xyz
+
