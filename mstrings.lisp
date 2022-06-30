@@ -122,5 +122,8 @@ It ignores and warns on any provided ARG, and provides a few quality-of-life fea
 
 (syntax:defsyntax shorthand-mstrings
   (:merge :standard)
+  ;; #\" is also claimed by the string-escape library
   (:dispatch-macro-char #\# #\" #'mstring-reader)
+  ;; #> is claimed by Clozure CL 1.2 and later :(
+  #-CCL-1.2
   (:dispatch-macro-char #\# #\> #'mstring-reader))

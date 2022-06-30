@@ -138,7 +138,7 @@ Sphinx of black quartz, judge my vow!
 ## Shorthand notation: `#"..." and #>"..."`
 
 The reader macro function provides single-mode shorthands based on the macro
-subchar, but are not provided by default to prevent macro collisions:
+subchar, but is defined as a separate syntax to prevent macro collisions:
 
 ```lisp
 * (syntax:use-syntax 'mstrings:shorthand-mstrings)
@@ -153,6 +153,10 @@ Mode"
         Mode"
 "Folding-block Mode"
 ```
+
+Be aware, `#"` is also used by the string-escape library, and `#>` is used by
+Clozure CL 1.2 and later (and therefore elided from the shorthand-mstrings
+syntax).
 
 ## API
 

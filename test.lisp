@@ -89,6 +89,9 @@ Mode"
         #"Literal-block
           Mode")
 
-  (t:is string= "Folding-block Mode"
-        #>"Folding-block
-           Mode"))
+  (t:skip-on (ccl-1.2) "#> macro claimed by Clozure CL 1.2 and later"
+    (t:is string= "Folding-block Mode"
+          #-CCL-1.2
+          #>"Folding-block Mode"
+          #+CCL-1.2
+          nil)))
