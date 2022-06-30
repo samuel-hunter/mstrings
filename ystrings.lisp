@@ -1,8 +1,12 @@
 ;;; ystrings.lisp - reader macro implementation
+;;;
+;;; Copyright (c) 2022 Samuel Hunter
+;;; BSD 3-Clause
 
 (defpackage #:xyz.shunter.ystrings
   (:nicknames #:ystrings)
-  (:use #:cl))
+  (:use #:cl)
+  (:export #:use-ystrings))
 
 (in-package #:xyz.shunter.ystrings)
 
@@ -83,4 +87,7 @@
 
 (syntax:define-package-syntax #:xyz.shunter.ystrings
   (:merge :standard)
-  (:dispatch-macro-char #\# #\Y 'read-ystring-reader))
+  (:dispatch-macro-char #\# #\Y #'read-ystring-reader))
+
+(defun use-ystrings (&optional (readtable *readtable*))
+  (set-dispatch-macro-character #\# #\Y #'read-ystring-reader readtable))
