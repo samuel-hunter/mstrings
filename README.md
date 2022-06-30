@@ -72,12 +72,12 @@ dependents [trivial-types](https://github.com/m2ym/trivial-types) and
 
 Install M-strings locally, until it is added to Quicklisp:
 
-```lisp
+```sh
 $ cd ~/common-lisp/ # Or wherever you store your definitions
 $ git clone https://git.sr.ht/~shunter/parsnip
 ```
 
-To use Y-string macros, call `(syntax:use-syntax '#:mstrings)` at the beginning
+To use M-string macros, call `(syntax:use-syntax '#:mstrings)` at the beginning
 of every file:
 
 ```lisp
@@ -90,18 +90,26 @@ of every file:
 
 ## Features
 
-M-strings reads empty lines as a single newline:
+M-strings remove leading whitespace:
+```lisp
+* (princ #M"Hello
+            World!")
+Hello
+World!
+```
+
+M-strings read empty lines as a single newline:
 
 ```lisp
 * (princ #M"Hello
 
-            World")
+            World!")
 Hello
 
-World
+World!
 ```
 
-M-strings respects escaped characters and, outside for newlines, treats them line non-whitespace characters:
+M-strings respect escaped characters and, outside for newlines, treats them line non-whitespace characters:
 
 ```lisp
 * (princ #M"keys:
@@ -112,8 +120,7 @@ keys:
   bar: "banana"
 ```
 
-A backslash followed by a newline merges two lines together, useful for very
-long lines:
+M-strings concatenate together two lines if they're separated by an escaped newline - useful for very long single-line values:
 
 ```lisp
 * (princ #M"NB2HI4DTHIXS653XO4XHS33VOR2WEZJOMNXW\
@@ -121,8 +128,10 @@ long lines:
 NB2HI4DTHIXS653XO4XHS33VOR2WEZJOMNXW2L3XMF2GG2B7OY6WIULXGR3TSV3HLBRVC===
 ```
 
-Preceding the string with a `>` can set the reader into "folding mode", where
-multiple lines in source are folded into one line, joined with spaces:
+By default, M-strings are read in "literal-block mode", where newlines are read
+as literal newlines. Prefixing a string with a `>` sets the reader to
+"folding-block mode", where multiple lines in the string are folded into one
+line:
 
 ```lisp
 * (princ #M>"The quick brown fox
@@ -137,8 +146,9 @@ Sphinx of black quartz, judge my vow!
 
 ## Shorthand notation: `#"..." and #>"..."`
 
-The reader macro function provides single-mode shorthands based on the macro
-subchar, but is defined as a separate syntax to prevent macro collisions:
+The reader macro function understands `#"..."` and `#>"..."` as shorthands for
+`#M"..."` and `#M>"..."`, respectively. They're defined separately to prevent
+macro collisions from other systems:
 
 ```lisp
 * (syntax:use-syntax 'mstrings:shorthand-mstrings)
@@ -166,9 +176,9 @@ Reader macro accepts multiline strings. It ignores and warns on any provided
 *arg*, and provides a few quality-of-life features depending on the value of
 *subchar*:
 
-- If *subchar* is `#\"`, it is always literal-block mode (`#M"..."`) and reads
+- If *subchar* is `#"`, it is always literal-block mode (`#M"..."`) and reads
   the rest of the string.
-- If *subchar* is `#\>`, it is always folding-block mode (`#M>"..."`).
+- If *subchar* is `#>`, it is always folding-block mode (`#M>"..."`).
 - If *subchar* is anything else, it follows the default behavior: it assumes
   literal-block mode unless there is a greater-than-sign preceding the string,
   in which case it switches to folding-block mode.
