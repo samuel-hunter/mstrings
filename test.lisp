@@ -112,7 +112,10 @@ Mode"
 
   (t:skip-on (ccl-1.2) "#> macro claimed by Clozure CL 1.2 and later"
     (t:is string= "Folding-block Mode"
-          #-CCL-1.2
-          #>"Folding-block Mode"
-          #+CCL-1.2
-          nil)))
+          ;; Wrap in read from string so that Clozure doesn't signal
+          ;; reader-error. Even if CCL reads #-ccl-1.2 #>"...", it
+          ;; wouldn't then know how to skip the M-string.
+          #-ccl-1.2
+          #.(with-input-from-string (in "#>\"Folding-block Mode\"")
+              (read in))
+          #+ccl-1.2 nil)))
