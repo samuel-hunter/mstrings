@@ -1,0 +1,12 @@
+image: alpine/edge
+environment:
+  mirror: git@github.com:samuel-hunter/mstrings.git
+  GIT_SSH_COMMAND: ssh -o StrictHostKeyChecking=no
+secrets:
+-  4baf7f1a-e7e7-407f-ab49-6b239d9207ba
+sources:
+- https://git.sr.ht/~shunter/mstrings
+tasks:
+- updatemirror: |
+    cd mstrings
+    git push --mirror "$mirror"
