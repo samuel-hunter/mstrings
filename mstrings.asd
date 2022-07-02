@@ -6,7 +6,7 @@
 (defsystem #:mstrings
   :description "Pretty multiline strings Reader Macro"
   :long-description "Mstrings defines a reader macro for strings with a small handful of features to provide visually appealing multiline blocks."
-  :version "0.1.0"
+  :version "0.1.1"
   :license "BSD 3-Clause"
   :author "Samuel Hunter"
 
@@ -21,7 +21,7 @@
 
 (defsystem #:mstrings/test
   :description "Mstrings library test suite"
-  :version "0.1.0"
+  :version "0.1.1"
   :license "BSD 3-Clause"
   :author "Samuel Hunter"
 
