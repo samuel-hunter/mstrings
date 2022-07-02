@@ -14,6 +14,31 @@
 
 
 
+;; Convenience functions
+(declaim (inline read-char! peek-char! whitespacep))
+
+(defun read-char! (stream)
+  (read-char stream t nil t))
+
+(defun peek-char! (peek-type stream)
+  (peek-char peek-type stream t nil t))
+
+(defun whitespacep (c)
+  (position c #.(coerce '(#\Space #\Tab #\Page #\Newline) 'string)))
+
+(defmacro do@ (varlist endlist &body body)
+  "Anaphoric DO. An @ in the then-form replays the init-form."
+  `(do ,(mapcar (lambda (var-form)
+                  (if (listp var-form)
+                      (destructuring-bind (var &optional init-form step-form)
+                                          var-form
+                        (if (eq step-form '@)
+                            `(,var ,init-form ,init-form)
+                            var-form))
+                      var-form))
+               varlist)
+       ,endlist ,@body))
+
 ;; Literal-block mode (#M"..."):
 ;; - Newlines and trailing spaces turn into a single newline
 ;; - Sequence of n newlines and any # of spaces are folded into n newlines
@@ -24,70 +49,73 @@
 ;; - Sequence of n+1 newlines and any # of spaces are folded into n newlines
 ;; - non-space or escaped character marks beginning of next line
 
-
-;; Convenience functions with default behavior
-(declaim (inline read-char! peek-char!))
-
-(defun read-char! (stream)
-  (read-char stream t nil t))
-
-(defun peek-char! (peek-type stream)
-  (peek-char peek-type stream t nil t))
-
-(defun whitespacep (c)
-  (and (position c #.(coerce '(#\Space #\Tab #\Page #\Newline) 'string))
-       t))
-
+(defun skip-spaces (stream)
+  "Skip until the first Newline or non-whitespace character and return it, unconsumed."
+  (do@ ((c (read-char! stream) @))
+       ((or (char= c #\Newline)
+            (not (whitespacep c)))
+        (unread-char c stream)
+        c)))
 
 (defun read-line-until-delim (stream out)
-  ;; Read from STREAM until it reaches a Newline or string delimiter #\" and
-  ;; write to OUT. Return whether it terminated from an unescaped Newline.
-  (do ((c (read-char! stream) (read-char! stream)))
-      ((char= c #\Newline) t)
+  "Read mstring contets from STREAM until a Newline or string delimiter \".
+Read from STREAM until it consumes a Newline or reaches the string delimiter \", and write to OUT.
+Escaped quotes and whitespaces are treated as a non-whitespace character.
+
+Returns two values:
+- Whether there should be a linebreak at the block mode's discretion;
+- Whether it has written any contents to OUT."
+  (skip-spaces stream)
+  (do@ ((c (read-char! stream) @)
+        written?)
+       ((char= c #\")
+        (unread-char #\" stream)
+        (values nil written?))
     (cond
-      ((char= c #\")
-       (unread-char #\" stream)
-       (return))
+      ;; Unescaped Newline
+      ((char= c #\Newline)
+       (return (values t written?)))
+      ;; Unescaped character
       ((not (char= c #\\))
-       (write-char c out))
+       (write-char c out)
+       (setf written? t))
+      ;; Escaped Newline
       ((char= (setf c (read-char! stream)) #\Newline)
-       (return))
-      (t (write-char c out)))))
+       (return (values nil written?)))
+      ;; Escaped character
+      (t (write-char c out)
+       (setf written? t)))))
 
 (defun skip-empty-lines (stream out)
-  ;; Skip to the first non-space character, and transform the number of "empty
-  ;; lines" (lines with no text or only whitespace) into #\Newline to OUT.
-  ;;
-  ;; Return whether any newlines were printed
-  (do ((c (read-char! stream) (read-char! stream))
-       newlines-printed?)
-      ((not (whitespacep c))
-       (unread-char c stream)
-       newlines-printed?)
-    (when (char= c #\Newline)
-      (write-char #\Newline out)
-      (setf newlines-printed? t))))
+  "Skip all lines that contain only unescaped whitespaces, and write them out as a singular Newline.
+Return whether any newlines were written."
+  (do@ ((c (skip-spaces stream) @)
+        (newlines-written? nil t))
+      ((not (char= c #\Newline))
+       newlines-written?)
+    (write-char (read-char! stream) out)
+    (setf newlines-written? t)))
 
 (defun read-literal-mstring (stream)
   (with-output-to-string (out)
-    (do () (nil)
+    (loop
       (when (read-line-until-delim stream out)
         (write-char #\Newline out))
       (when (char= (peek-char! nil stream) #\")
         (read-char! stream)
-        (return))
-      (skip-empty-lines stream out))))
+        (return)))))
 
 (defun read-folding-mstring (stream)
   (with-output-to-string (out)
     (do (print-space?) (nil)
-      (setf print-space? (read-line-until-delim stream out))
-      (when (char= (peek-char! nil stream) #\")
-        (read-char! stream)
-        (return))
-      (when (and (not (skip-empty-lines stream out))
-                 print-space?)
-        (write-char #\Space out)))))
+      (multiple-value-bind (linebreak? written?)
+                           (read-line-until-delim stream out)
+        (when (char= (peek-char! nil stream) #\")
+          (read-char! stream)
+          (return))
+        (when (and (not (skip-empty-lines stream out))
+                   linebreak? written?)
+          (write-char #\Space out))))))
 
 (defun mstring-reader (stream subchar arg)
   "Multiline string reader function to be installed as a dispatching macro character.

@@ -73,8 +73,8 @@ dependents [trivial-types](https://github.com/m2ym/trivial-types) and
 Install M-strings locally, until it is added to Quicklisp:
 
 ```sh
-$ cd ~/common-lisp/ # Or wherever you store your definitions
-$ git clone https://git.sr.ht/~shunter/parsnip
+$ cd ~/common-lisp/ # Or wherever you store your systems
+$ git clone https://git.sr.ht/~shunter/mstrings
 ```
 
 To use M-string macros, call `(syntax:use-syntax '#:mstrings)` at the beginning

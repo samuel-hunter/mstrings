@@ -58,7 +58,19 @@ worst"
   (t:is string= "Overhang
 "
         #M"Overhang
-           "))
+           ")
+
+  (t:is string= "
+Jabberwocky!"
+        #M"
+        Jabberwocky!")
+
+  (t:is string= "
+
+Jabberwocky!"
+        #M"
+
+        Jabberwocky!"))
 
 (t:define-test folding-mode-mstrings
   (t:is string= "Hello World!"
@@ -81,7 +93,17 @@ World!"
         scorpions
                 sting
                         the
-            worst"))
+            worst")
+
+  (t:is string= "Jabberwocky!"
+        #M>"
+        Jabberwocky!")
+
+  (t:is string= "
+Jabberwocky!"
+        #M>"
+
+        Jabberwocky!"))
 
 (t:define-test mstring-macro-shorthands
   (t:is string= "Literal-block
