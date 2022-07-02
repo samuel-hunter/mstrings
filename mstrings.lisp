@@ -7,7 +7,9 @@
   (:nicknames #:mstrings)
   (:use #:cl)
   (:export #:mstring-reader
-           #:shorthand-mstrings)
+           #:mstring-syntax
+           #:shorthand-mstring-syntax
+           #:full-mstring-syntax)
   (:documentation "Reader macro for friendlier multiline strings"))
 
 (in-package #:xyz.shunter.mstrings)
@@ -144,14 +146,17 @@ It ignores and warns on any provided ARG, and provides a few quality-of-life fea
     ;; Room for more block modes here if need be
     (t (error "Unknown string style '~C'" (peek-char! nil stream)))))
 
-(syntax:define-package-syntax #:xyz.shunter.mstrings
+(named-readtables:defreadtable mstring-syntax
   (:merge :standard)
   (:dispatch-macro-char #\# #\M #'mstring-reader))
 
-(syntax:defsyntax shorthand-mstrings
+(named-readtables:defreadtable shorthand-mstring-syntax
   (:merge :standard)
   ;; #\" is also claimed by the string-escape library
   (:dispatch-macro-char #\# #\" #'mstring-reader)
   ;; #> is claimed by Clozure CL 1.2 and later :(
   #-CCL-1.2
   (:dispatch-macro-char #\# #\> #'mstring-reader))
+
+(named-readtables:defreadtable full-mstring-syntax
+  (:merge mstring-syntax shorthand-mstring-syntax))

@@ -1,10 +1,13 @@
-# M-strings for Common Lisp
+# Mstrings - Pretty Multliline Strings for Common Lisp
 [![builds.sr.ht status](https://builds.sr.ht/~shunter/mstrings/commits/master/test.yml.svg)](https://builds.sr.ht/~shunter/mstrings/commits/master/test.yml)
 
-Reader macro for friendlier multiline strings.
+**Mstrings** defines a reader macro for strings with a small handful of
+features to provide visually appealing multiline blocks. An M-string:
 
-M-strings defines a reader macro for multiline strings with various
-quality-of-life features, including whitespace elimination and folding.
+- Trims leading whitespace from lines
+- Respects escaped whitespace characters and keeps them untrimmed
+- Concatenates lines together when joined by an escaped Newline
+- Alternative mode to fold multiple non-empty lines into one joined by spaces
 
 When writing strings that take multiple lines, for example an extensive
 docstring, it feels natural to align them up. However, the Lisp reader will
@@ -63,12 +66,9 @@ qux=3"
 Any comments, questions, issues, or patches are greatly appreciated!
 I do my main development on [Sourcehut](https://sr.ht/~shunter/mstrings/), with a [mailing list](https://lists.sr.ht/~shunter/public-inbox) and [issue tracker](https://todo.sr.ht/~shunter/mstrings).
 
-## Usage
+## Install and Enable It
 
-M-strings uses [cl-syntax](https://github.com/fukamachi/cl-syntax) to expose the
-reader macro. Install it through Quicklisp, or manually alongside its
-dependents [trivial-types](https://github.com/m2ym/trivial-types) and
-[named-readtables](https://github.com/kmizumar/named-readtables/).
+M-strings' sole dependency is [named-readtables](https://named-readtables.common-lisp.dev/), available on Quicklisp.
 
 Install M-strings locally, until it is added to Quicklisp:
 
@@ -77,20 +77,22 @@ $ cd ~/common-lisp/ # Or wherever you store your systems
 $ git clone https://git.sr.ht/~shunter/mstrings
 ```
 
-To use M-string macros, call `(syntax:use-syntax '#:mstrings)` at the beginning
-of every file:
+This library uses named readtables to expose the reader:
 
 ```lisp
-* (require :mstrings)
-* (syntax:use-syntax '#:mstrings)
+* (use-package :named-readtables)
+* (in-readtable mstrings:mstring-syntax)
 
-* #M"Hello, world!"
-* "Hello, world!"
+* (princ #M"Hello
+            World!")
+Hello
+World!
 ```
 
 ## Features
 
-M-strings remove leading whitespace:
+M-strings trim leading whitespace from lines:
+
 ```lisp
 * (princ #M"Hello
             World!")
@@ -98,18 +100,7 @@ Hello
 World!
 ```
 
-M-strings read empty lines as a single newline:
-
-```lisp
-* (princ #M"Hello
-
-            World!")
-Hello
-
-World!
-```
-
-M-strings respect escaped characters and, outside for newlines, treats them line non-whitespace characters:
+M-strings respect escaped characters and keeps them untrimmed:
 
 ```lisp
 * (princ #M"keys:
@@ -120,7 +111,7 @@ keys:
   bar: "banana"
 ```
 
-M-strings concatenate together two lines if they're separated by an escaped newline - useful for very long single-line values:
+M-strings concatenates lines together when they're joined by an escaped Newline - useful for very long single-line values:
 
 ```lisp
 * (princ #M"NB2HI4DTHIXS653XO4XHS33VOR2WEZJOMNXW\
@@ -130,8 +121,8 @@ NB2HI4DTHIXS653XO4XHS33VOR2WEZJOMNXW2L3XMF2GG2B7OY6WIULXGR3TSV3HLBRVC===
 
 By default, M-strings are read in "literal-block mode", where newlines are read
 as literal newlines. Prefixing a string with a `>` sets the reader to
-"folding-block mode", where multiple lines in the string are folded into one
-line:
+"folding-block mode", where multiple non-empty lines are folded into one,
+joined by spaces:
 
 ```lisp
 * (princ #M>"The quick brown fox
@@ -142,6 +133,13 @@ line:
              judge my vow!")
 The quick brown fox jumps over the lazy dog.
 Sphinx of black quartz, judge my vow!
+
+* (princ #M>"Escaped newlines
+             \
+             still prevent
+             \
+             line breaks")
+Escaped Newlines still prevent line breaks
 ```
 
 ## Shorthand notation: `#"..." and #>"..."`
@@ -151,9 +149,9 @@ The reader macro function understands `#"..."` and `#>"..."` as shorthands for
 macro collisions from other systems:
 
 ```lisp
-* (syntax:use-syntax 'mstrings:shorthand-mstrings)
-  ;; Or, for both:
-* (syntax:use-syntax '(#:mstrings mstrings:shorthand-mstrings))
+* (in-readtable mstrings:shorthand-mstring-syntax)
+* ;; Or, for both shorthand and long-hand:
+* (in-readtable mstrings:full-mstring-syntax)
 
 *    #"Literal-block
        Mode"
@@ -182,3 +180,26 @@ Reader macro accepts multiline strings. It ignores and warns on any provided
 - If *subchar* is anything else, it follows the default behavior: it assumes
   literal-block mode unless there is a greater-than-sign preceding the string,
   in which case it switches to folding-block mode.
+
+### [Readtable] **mstring-syntax**
+
+The standard readtable with the longhand mstring syntax:
+
+- `#M"..."` - Literal-block mstring
+- `#M>"..."` - Folding-block mstring
+
+### [Readtable] **shorthand-mstring-syntax**
+
+The standard readtable with both `#"` and `#>` dispatch character pairs bound
+to **mstring-reader**:
+
+- `#"..."` - Literal-block mstring
+- `#>"..."` - Folding-block mstring
+
+### [Readtable] **full-mstring-syntax**
+
+The standard readtable with additions from both **mstring-syntax** and
+**shorthand-mstring-syntax**:
+
+- `#M"..."`, `#"..."` - Literal-block mstring
+- `#M>"..."`, `#>"..."` - Folding-block mstring

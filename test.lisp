@@ -9,8 +9,7 @@
   (:documentation "Mstrings library test suite"))
 
 (in-package #:xyz.shunter.mstrings.test)
-
-(syntax:use-syntax '(#:xyz.shunter.mstrings shorthand-mstrings))
+(named-readtables:in-readtable full-mstring-syntax)
 
 
 

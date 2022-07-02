@@ -4,9 +4,9 @@
 ;;; BSD 3-Clause License. See LICENSE for details.
 
 (defsystem #:mstrings
-  :description "Reader macro for friendlier multiline strings"
-  :long-description "Mstrings defines a reader macro for multiline strings with various quality-of-life features, including whitespace elimination and line folding."
-  :version "0.0.0"
+  :description "Pretty multiline strings Reader Macro"
+  :long-description "Mstrings defines a reader macro for strings with a small handful of features to provide visually appealing multiline blocks."
+  :version "0.1.0"
   :license "BSD 3-Clause"
   :author "Samuel Hunter"
 
@@ -15,17 +15,18 @@
   :bug-tracker "https://todo.sr.ht/~shunter/mstrings/"
   :mailto "\~\s\h\u\n\t\e\r\/\p\u\b\l\i\c\-\i\n\b\o\x\@\l\i\s\t\s\.\s\r\.\h\t"
 
-  :depends-on (#:cl-syntax)
+  :depends-on (#:named-readtables)
   :components ((:file "mstrings"))
   :in-order-to ((test-op (test-op :mstrings/test))))
 
 (defsystem #:mstrings/test
   :description "Mstrings library test suite"
-  :version "0.0.0"
+  :version "0.1.0"
   :license "BSD 3-Clause"
   :author "Samuel Hunter"
 
   :depends-on (#:mstrings
+               #:cl-syntax
                #:parachute)
   :components ((:file "test"))
   :perform (test-op (op c)
