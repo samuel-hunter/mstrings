@@ -1,5 +1,6 @@
 # Mstrings - Pretty Multliline Strings for Common Lisp
 [![builds.sr.ht status](https://builds.sr.ht/~shunter/mstrings/commits/master/test.yml.svg)](https://builds.sr.ht/~shunter/mstrings/commits/master/test.yml)
+[![Quicklisp status](https://quickdocs.org/badge/mstrings.svg)](https://quickdocs.org/mstrings)
 
 **Mstrings** defines a reader macro for strings with a small handful of
 features to provide visually appealing multiline blocks. An M-string:
@@ -66,18 +67,17 @@ qux=3"
 Any comments, questions, issues, or patches are greatly appreciated!
 I do my main development on [Sourcehut](https://sr.ht/~shunter/mstrings/), with a [mailing list](https://lists.sr.ht/~shunter/public-inbox) and [issue tracker](https://todo.sr.ht/~shunter/mstrings).
 
-## Install and Enable It
+## Installation and Usage
 
-M-strings' sole dependency is [named-readtables](https://named-readtables.common-lisp.dev/), available on Quicklisp.
+Install M-strings with Quicklisp:
 
-Install M-strings locally, until it is added to Quicklisp:
-
-```sh
-$ cd ~/common-lisp/ # Or wherever you store your systems
-$ git clone https://git.sr.ht/~shunter/mstrings
+```lisp
+(ql:quickload :mstrings)
 ```
 
-This library uses named readtables to expose the reader:
+This library uses its sole dependency,
+[named-readtables](https://named-readtables.common-lisp.dev),
+to expose the reader:
 
 ```lisp
 * (use-package :named-readtables)
